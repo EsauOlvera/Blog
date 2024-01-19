@@ -3,12 +3,16 @@ import {
   View,
   Text
 } from 'react-native';
+import { Provider } from 'react-redux';
 import AppNavigation from './src/navigation/Navigation';
+import store from './src/redux/store';
 
 function App(){
 
   return (
-    <AppNavigation />
+    <Provider store={store}>
+      <AppNavigation />
+    </Provider>
   );
 }
 
