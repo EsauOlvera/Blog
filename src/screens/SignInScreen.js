@@ -3,16 +3,39 @@ import { View, Text, Image, TextInput, TouchableOpacity  } from 'react-native';
 import ScreenWrapper from '../components/ScreenWrapper';
 import { colors } from '../theme';
 import { useNavigation } from '@react-navigation/native';
+import Snackbar from 'react-native-snackbar';
+import { signInWithEmailAndPassword } from 'firebase/auth';
+import { auth } from '../config/firebase';
+import { useDispatch, useSelector } from 'react-redux';
+import NowLoading from '../components/NowLoading';
+import { setUserLoading } from '../redux/slices/user';
 
 export default function SignInScreen() {
-    const [email, setEmail] = useState('');
-    const [password, setPassword] = useState('');
+    const [email, setEmail] = useState('')
+    const [password, setPassword] = useState('')
 
-    const navigation = useNavigation()
+    const {userLoading} = useSelector(state => state.user)
 
-    const handleSubmit = () => {
+    const dispatch = useDispatch()
+
+    const handleSubmit = async () => {
         if(email && password) {
-            navigation.navigate('Inicio')
+            try {
+                dispatch(setUserLoading(true))
+                await signInWithEmailAndPassword(auth, email, password)
+                dispatch(setUserLoading(false))
+            } catch (e) {
+                dispatch(setUserLoading(false))
+                Snackbar.show({
+                    text: e.message,
+                    backgroundColor: 'red'
+                })
+            }
+        } else {
+            Snackbar.show({
+                text: 'Correo y contraseña son requeridos',
+                backgroundColor: 'red'
+            })
         }
     }
 
@@ -35,14 +58,14 @@ export default function SignInScreen() {
                 </View>
             <View>
             {
-                /*
+                
                 userLoading? (
-                    <Loading />
-                ):(*/
+                    <NowLoading />
+                    ):(
                     <TouchableOpacity onPress={handleSubmit} className="rounded-full p-3 shadow-sm mx-2 bg-blue-600 my-4">
                         <Text className="text-center text-white text-lg font-bold">Ingresa</Text>
                     </TouchableOpacity>
-                    
+                )   
                 
             }
             </View>

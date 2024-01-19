@@ -4,13 +4,23 @@ import ScreenWrapper from '../components/ScreenWrapper';
 import { colors } from '../theme';
 import { items } from '../constants/items';
 import PostView from '../components/PostView';
+import { signOut } from 'firebase/auth';
+import { auth } from '../config/firebase';
+import { useNavigation } from '@react-navigation/native';
 
 export default function HomeScreen() {
+
+    const navigation = useNavigation()
+    
+    const handleLogOut = async () => {
+        await signOut(auth)
+    }
+    
     return (
         <ScreenWrapper className="flex-1">
             <View className="flex-row justify-between items-center p-3">
                 <Text className={`${colors.heading} font-bold text-3xl shadow-sm`} >Bienvenido</Text>
-                <TouchableOpacity className="p-2 px-3 bg-white border-gray-200 rounded-full" >
+                <TouchableOpacity onPress={handleLogOut} className="p-2 px-3 bg-white border-gray-200 rounded-full" >
                     <Text className={`${colors.red}`} >Salir</Text>
                 </TouchableOpacity>
             </View>
@@ -39,7 +49,7 @@ export default function HomeScreen() {
                 </View>
             </View>
             <View className="justify-between items-center">
-                <TouchableOpacity className={`${colors.heading} p-2 px-3 bg-blue-600 rounded-full my-8`}>
+                <TouchableOpacity onPress={() => navigation.navigate('Creacion')} className={`${colors.heading} p-2 px-3 bg-blue-600 rounded-full my-8`}>
                     <Text className={`${colors.btnColor}`}>Añadir nueva publicación</Text>
                 </TouchableOpacity>
             </View>
