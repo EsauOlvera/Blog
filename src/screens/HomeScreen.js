@@ -1,10 +1,48 @@
 import { React } from 'react';
-import { View, Text } from 'react-native';
+import { View, Text, TouchableOpacity, FlatList } from 'react-native';
+import ScreenWrapper from '../components/ScreenWrapper';
+import { colors } from '../theme';
+import { items } from '../constants/items';
+import PostView from '../components/PostView';
 
 export default function HomeScreen() {
     return (
-        <View>
-            <Text>Home Screen</Text>
-        </View>
+        <ScreenWrapper className="flex-1">
+            <View className="flex-row justify-between items-center p-3">
+                <Text className={`${colors.heading} font-bold text-3xl shadow-sm`} >Bienvenido</Text>
+                <TouchableOpacity className="p-2 px-3 bg-white border-gray-200 rounded-full" >
+                    <Text className={`${colors.red}`} >Salir</Text>
+                </TouchableOpacity>
+            </View>
+            <View className="max-h-[77%] mx-3">
+                <View className="justify-between items-center">
+                    <Text className={`${colors.heading} font-bold text-xl`}>
+                        Publicaciones Receientes
+                    </Text>
+                </View>
+                <View>
+                    <FlatList 
+                        data={items}
+                        keyExtractor={item => item.id}
+                        showsVerticalScrollIndicator={false}
+                        renderItem={({item}) => {
+                            return (
+                                <PostView 
+                                    title={item.titulo}
+                                    autor={item.autor}
+                                    date={item.fecha}
+                                    content={item.contenido}
+                                />
+                            )
+                        }}
+                    />
+                </View>
+            </View>
+            <View className="justify-between items-center">
+                <TouchableOpacity className={`${colors.heading} p-2 px-3 bg-blue-600 rounded-full my-8`}>
+                    <Text className={`${colors.btnColor}`}>Añadir nueva publicación</Text>
+                </TouchableOpacity>
+            </View>
+        </ScreenWrapper>
     )
 }

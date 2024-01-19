@@ -1,10 +1,11 @@
 import { React } from 'react';
 import { View, Text } from 'react-native';
+import ScreenWrapper from '../components/ScreenWrapper';
 
 export default function LoginScreen() {
     return (
-        <View>
+        <ScreenWrapper>
             <Text>Login Screen</Text>
-        </View>
+        </ScreenWrapper>
     )
 }
