@@ -1,15 +1,8 @@
-import { React } from 'react';
-import { View, Text, StatusBar } from 'react-native';
+import { React } from 'react'
+import { View, Text, StatusBar } from 'react-native'
 
-export default function ScreenWrapper({children}) {
+export default function ScreenWrapper({ children }) {
+  let statusBarHeight = StatusBar.currentHeight ? StatusBar.currentHeight : 30
 
-    let statusBarHeight = StatusBar.currentHeight ? StatusBar.currentHeight : 30;
-
-    return (
-        <View style={{paddingTop: statusBarHeight}}>
-            {
-                children
-            }
-        </View>
-    )
+  return <View style={{ paddingTop: statusBarHeight }}>{children}</View>
 }
