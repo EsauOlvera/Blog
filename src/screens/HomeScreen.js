@@ -42,10 +42,10 @@ export default function HomeScreen() {
             renderItem={({ item }) => {
               return (
                 <PostView
-                  title={item.titulo}
-                  autor={item.autor}
-                  date={item.fecha}
-                  content={item.contenido}
+                  title={item.title}
+                  autor={item.author}
+                  date={item.date}
+                  content={item.content}
                 />
               )
             }}
