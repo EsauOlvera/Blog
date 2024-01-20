@@ -16,8 +16,8 @@ export default function HomeScreen() {
   }
 
   return (
-    <ScreenWrapper className="flex-1">
-      <View className="flex-row justify-between items-center p-3">
+    <ScreenWrapper>
+      <View className="flex-row justify-between items-center p-3 mt-6">
         <Text className={`${colors.heading} font-bold text-3xl shadow-sm`}>
           Bienvenido
         </Text>
@@ -28,7 +28,7 @@ export default function HomeScreen() {
           <Text className={`${colors.red}`}>Salir</Text>
         </TouchableOpacity>
       </View>
-      <View className="max-h-[77%] mx-3">
+      <View className="max-h-[70%] mx-3 my-6">
         <View className="justify-between items-center">
           <Text className={`${colors.heading} font-bold text-xl`}>
             Publicaciones Receientes
@@ -52,12 +52,14 @@ export default function HomeScreen() {
           />
         </View>
       </View>
-      <View className="justify-between items-center">
+      <View className="flex justify-between mx-4">
         <TouchableOpacity
           onPress={() => navigation.navigate('Creacion')}
-          className={`${colors.heading} p-2 px-3 bg-blue-600 rounded-full my-8`}
+          className="rounded-full p-2 shadow-sm bg-blue-600 my-6"
         >
-          <Text className={`${colors.btnColor}`}>Añadir nueva publicación</Text>
+          <Text className="text-center text-white text-lg font-bold">
+            Nuevo Post
+          </Text>
         </TouchableOpacity>
       </View>
     </ScreenWrapper>

@@ -27,10 +27,12 @@ export default function AppNavigation() {
       <NavigationContainer>
         <Stack.Navigator
           initialRouteName="Inicio"
-          screenOptions={{ headerBackTitleVisible: false }}
+          screenOptions={{
+            headerBackTitleVisible: false,
+          }}
         >
           <Stack.Screen
-            options={{ headerBackVisible: false }}
+            options={{ headerBackVisible: false, headerShown: false }}
             name="Inicio"
             component={HomeScreen}
           />
