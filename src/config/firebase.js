@@ -5,7 +5,10 @@ import {
   collection,
   doc,
   getDoc,
+  getDocs,
   getFirestore,
+  orderBy,
+  query,
   serverTimestamp,
   setDoc,
 } from 'firebase/firestore'
@@ -89,6 +92,45 @@ export const addPostForUser = async (userId, title, content) => {
   } catch (error) {
     console.error('Error al agregar el post:', error.message)
     return false
+  }
+}
+
+export const getAllUsers = async () => {
+  try {
+    const usersCollection = collection(db, 'users')
+    const querySnapshot = await getDocs(usersCollection)
+
+    const allUsers = querySnapshot.docs.map((doc) => ({
+      id: doc.id,
+      ...doc.data(),
+    }))
+
+    console.log('Todos los usuarios obtenidos')
+    return allUsers
+  } catch (error) {
+    console.error('Error al obtener todos los usuarios:', error.message)
+    throw error
+  }
+}
+
+export const getUserPosts = async (userId) => {
+  try {
+    const userPostsCollection = collection(db, 'users', userId, 'posts')
+    const querySnapshot = await getDocs(userPostsCollection)
+
+    const userPosts = querySnapshot.docs.map((doc) => ({
+      id: doc.id,
+      ...doc.data(),
+    }))
+
+    console.log('Publicaciones del usuario con UID:', userId, userPosts)
+    return userPosts
+  } catch (error) {
+    console.error(
+      'Error al obtener las publicaciones del usuario:',
+      error.message
+    )
+    throw error
   }
 }
 

@@ -5,10 +5,16 @@ import { colors } from '../theme'
 import { items } from '../constants/items'
 import PostView from '../components/PostView'
 import { signOut } from 'firebase/auth'
-import { auth, getUserNameFromFirebase } from '../config/firebase'
+import {
+  auth,
+  getUserNameFromFirebase,
+  getAllUsers,
+  getUserPosts,
+} from '../config/firebase'
 import { useNavigation } from '@react-navigation/native'
 import { useDispatch, useSelector } from 'react-redux'
 import { setUserName } from '../redux/slices/user'
+import NowLoading from '../components/NowLoading'
 
 export default function HomeScreen() {
   const { user } = useSelector((state) => state.user)
@@ -16,15 +22,42 @@ export default function HomeScreen() {
   const navigation = useNavigation()
   const dispatch = useDispatch()
   const [userNameStored, setUserNameStored] = useState('')
+  const [allPostsObtained, setAllPostsObtained] = useState([])
+  const [isLoading, setIsLoading] = useState(true)
+  const [error, setError] = useState(null)
 
   useEffect(() => {
     const fetchUserName = async () => {
       try {
+        setIsLoading(true)
         const fetchedUserName = await getUserNameFromFirebase(user.uid)
         setUserNameStored(fetchedUserName)
         dispatch(setUserName(fetchedUserName))
+
+        const users = await getAllUsers()
+
+        const usersWithPosts = await Promise.all(
+          users.map(async (user) => {
+            const userPosts = await getUserPosts(user.id)
+            const userName = await getUserNameFromFirebase(user.id)
+
+            const postsWithAuthor = userPosts.map((post) => ({
+              id: post.id,
+              author: userName,
+              ...post,
+            }))
+
+            return postsWithAuthor
+          })
+        )
+
+        const flattenedPosts = usersWithPosts.flat()
+        setAllPostsObtained(flattenedPosts)
       } catch (error) {
         console.error('Error al obtener información', error.message)
+        setError(error.message)
+      } finally {
+        setIsLoading(false)
       }
     }
 
@@ -55,21 +88,25 @@ export default function HomeScreen() {
           </Text>
         </View>
         <View>
-          <FlatList
-            data={items}
-            keyExtractor={(item) => item.id}
-            showsVerticalScrollIndicator={false}
-            renderItem={({ item }) => {
-              return (
+          {isLoading ? (
+            <NowLoading />
+          ) : error ? (
+            <Text>Error: {error}</Text>
+          ) : (
+            <FlatList
+              data={allPostsObtained}
+              keyExtractor={(item) => item.id}
+              showsVerticalScrollIndicator={false}
+              renderItem={({ item }) => (
                 <PostView
                   title={item.title}
                   autor={item.author}
-                  date={item.date}
+                  date={item.timestamp}
                   content={item.content}
                 />
-              )
-            }}
-          />
+              )}
+            />
+          )}
         </View>
       </View>
       <View className="flex justify-between mx-4">
