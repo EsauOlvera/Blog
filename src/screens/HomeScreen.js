@@ -12,6 +12,7 @@ import { setUserName } from '../redux/slices/user'
 
 export default function HomeScreen() {
   const { user } = useSelector((state) => state.user)
+  const name = useSelector((state) => state.userName)
   const navigation = useNavigation()
   const dispatch = useDispatch()
   const [userNameStored, setUserNameStored] = useState('')

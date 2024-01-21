@@ -6,27 +6,26 @@ import Snackbar from 'react-native-snackbar'
 import { useSelector } from 'react-redux'
 import NowLoading from '../components/NowLoading'
 import ScreenWrapper from '../components/ScreenWrapper'
-import { db, postRef } from '../config/firebase'
+import { addPostForUser, db, postRef } from '../config/firebase'
 import { colors } from '../theme'
 
 export default function CreatePostScreen() {
   const [title, setTitle] = useState('')
   const [content, setContent] = useState('')
   const [loading, setLoading] = useState(false)
+  const userName = useSelector((state) => state.user.userName)
   const { user } = useSelector((state) => state.user)
 
+  const userId = user.uid
   const navigation = useNavigation()
 
   const handlePost = async () => {
     if (title && content) {
       try {
         setLoading(true)
-        let doc = await addDoc(postRef, {
-          title,
-          content,
-        })
+        let doc = await addPostForUser(userId, title, content)
         setLoading(false)
-        if (doc && doc.id) navigation.goBack()
+        if (doc) navigation.goBack()
       } catch (e) {
         Snackbar.show({
           text: e.message,
@@ -67,6 +66,9 @@ export default function CreatePostScreen() {
               onChangeText={(value) => setContent(value)}
               className="p-4 bg-white rounded-full mb-3"
             />
+            <Text className={`${colors.heading} text-lg font-bold`}>
+              Post creado por {`${userName}`}
+            </Text>
           </View>
         </View>
         <View>
