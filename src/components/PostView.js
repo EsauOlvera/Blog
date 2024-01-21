@@ -1,15 +1,21 @@
-import { React } from 'react'
+import { React, useState } from 'react'
 import { View, Text, TouchableOpacity } from 'react-native'
 
 export default function PostView({ title, autor, date, content }) {
-  let contentMaxLength = 70
+  const [showContent, setShowContent] = useState(true)
 
-  const contentText = typeof content === 'string' ? content : ''
+  const truncatedContent = (text) => {
+    const contentMaxLength = 70
+    return text.length >= contentMaxLength
+      ? text.substring(0, contentMaxLength) + '...'
+      : text
+  }
 
-  const truncatedContent =
-    contentText.length >= contentMaxLength
-      ? contentText.substring(0, contentMaxLength) + '...'
-      : contentText
+  const toggleContentVisibility = () => {
+    setShowContent(!showContent)
+  }
+
+  const formattedContent = showContent ? truncatedContent(content) : content
 
   const formatDate = (date) => {
     if (date && date.seconds && date.nanoseconds !== undefined) {
@@ -18,7 +24,6 @@ export default function PostView({ title, autor, date, content }) {
 
       const options = { day: '2-digit', month: 'long', year: 'numeric' }
       const formattedDate = dateObject.toLocaleDateString(undefined, options)
-      console.log(formattedDate)
       return formattedDate
     } else {
       console.error('El objeto date no es un timestamp de Firebase válido.')
@@ -27,7 +32,7 @@ export default function PostView({ title, autor, date, content }) {
   }
 
   return (
-    <TouchableOpacity className="flex-1 bg-slate-300 rounded shadow-sm my-1">
+    <View className="flex-1 bg-slate-300 rounded shadow-sm my-1">
       <View className="justify-between items-baseline p-3">
         <Text className="font-bold text-2xl text-clip">{title}</Text>
       </View>
@@ -35,9 +40,14 @@ export default function PostView({ title, autor, date, content }) {
         <Text className="font-light">{autor}</Text>
         <Text className="font-light">{formatDate(date)}</Text>
       </View>
-      <View className="flex-1 p-3 justify-start">
-        <Text>{truncatedContent}</Text>
+      <View className="p-3 justify-start">
+        <Text numberOfLines={null}>{formattedContent}</Text>
       </View>
-    </TouchableOpacity>
+      {content.length >= 70 && (
+        <TouchableOpacity className="p-3" onPress={toggleContentVisibility}>
+          <Text>{showContent ? 'Ver más...' : 'Ocultar'}</Text>
+        </TouchableOpacity>
+      )}
+    </View>
   )
 }
