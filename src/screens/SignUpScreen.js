@@ -2,28 +2,40 @@ import { View, Text, Image, TextInput, TouchableOpacity } from 'react-native'
 import React, { useState } from 'react'
 import ScreenWrapper from '../components/ScreenWrapper'
 import { colors } from '../theme'
-import { useNavigation } from '@react-navigation/native'
 import Snackbar from 'react-native-snackbar'
 import { createUserWithEmailAndPassword } from 'firebase/auth'
-import { auth } from '../config/firebase'
+import { auth, postUserName, storeUserInfo } from '../config/firebase'
 import { useDispatch, useSelector } from 'react-redux'
 import NowLoading from '../components/NowLoading'
-import { setUserLoading } from '../redux/slices/user'
+import { setUserLoading, setUserName } from '../redux/slices/user'
 
 export default function SignUpScreen() {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
+  const [userName, setUserName] = useState('')
 
   const { userLoading } = useSelector((state) => state.user)
   const dispatch = useDispatch()
 
   const handleSubmit = async () => {
-    if (email && password) {
+    if (email && password && userName) {
       try {
         dispatch(setUserLoading(true))
-        await createUserWithEmailAndPassword(auth, email, password)
+
+        let authResult = await createUserWithEmailAndPassword(
+          auth,
+          email,
+          password
+        )
+
+        const userId = authResult.user.uid
+
+        await storeUserInfo(userId, userName)
+        console.log('usuario registrado exitosamente')
+
         dispatch(setUserLoading(false))
       } catch (e) {
+        console.log(e.message)
         dispatch(setUserLoading(false))
         Snackbar.show({
           text: e.message,
@@ -61,6 +73,14 @@ export default function SignUpScreen() {
               value={password}
               secureTextEntry
               onChangeText={(value) => setPassword(value)}
+              className="p-4 bg-white rounded-full mb-3"
+            />
+            <Text className={`${colors.heading} text-lg font-bold`}>
+              Nombre de Usuario
+            </Text>
+            <TextInput
+              value={userName}
+              onChangeText={(value) => setUserName(value)}
               className="p-4 bg-white rounded-full mb-3"
             />
           </View>

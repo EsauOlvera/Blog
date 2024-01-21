@@ -1,15 +1,34 @@
-import { React } from 'react'
+import { React, useEffect, useState } from 'react'
 import { View, Text, TouchableOpacity, FlatList } from 'react-native'
 import ScreenWrapper from '../components/ScreenWrapper'
 import { colors } from '../theme'
 import { items } from '../constants/items'
 import PostView from '../components/PostView'
 import { signOut } from 'firebase/auth'
-import { auth } from '../config/firebase'
+import { auth, getUserNameFromFirebase } from '../config/firebase'
 import { useNavigation } from '@react-navigation/native'
+import { useDispatch, useSelector } from 'react-redux'
+import { setUserName } from '../redux/slices/user'
 
 export default function HomeScreen() {
+  const { user } = useSelector((state) => state.user)
   const navigation = useNavigation()
+  const dispatch = useDispatch()
+  const [userNameStored, setUserNameStored] = useState('')
+
+  useEffect(() => {
+    const fetchUserName = async () => {
+      try {
+        const fetchedUserName = await getUserNameFromFirebase(user.uid)
+        setUserNameStored(fetchedUserName)
+        dispatch(setUserName(fetchedUserName))
+      } catch (error) {
+        console.error('Error al obtener información', error.message)
+      }
+    }
+
+    fetchUserName()
+  }, [user.uid, dispatch])
 
   const handleLogOut = async () => {
     await signOut(auth)
@@ -19,7 +38,7 @@ export default function HomeScreen() {
     <ScreenWrapper>
       <View className="flex-row justify-between items-center p-3 mt-6">
         <Text className={`${colors.heading} font-bold text-3xl shadow-sm`}>
-          Bienvenido
+          Bienvenido {`${userNameStored}`}
         </Text>
         <TouchableOpacity
           onPress={handleLogOut}
