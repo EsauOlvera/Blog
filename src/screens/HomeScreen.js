@@ -2,7 +2,6 @@ import { React, useEffect, useState } from 'react'
 import { View, Text, TouchableOpacity, FlatList } from 'react-native'
 import ScreenWrapper from '../components/ScreenWrapper'
 import { colors } from '../theme'
-import { items } from '../constants/items'
 import PostView from '../components/PostView'
 import { signOut } from 'firebase/auth'
 import {
@@ -15,6 +14,8 @@ import { useNavigation } from '@react-navigation/native'
 import { useDispatch, useSelector } from 'react-redux'
 import { setUserName } from '../redux/slices/user'
 import NowLoading from '../components/NowLoading'
+import { MagnifyingGlassIcon } from 'react-native-heroicons/outline'
+import FilterModal from '../components/FilterModal'
 
 export default function HomeScreen() {
   const { user } = useSelector((state) => state.user)
@@ -22,7 +23,11 @@ export default function HomeScreen() {
   const navigation = useNavigation()
   const dispatch = useDispatch()
   const [userNameStored, setUserNameStored] = useState('')
+
   const [allPostsObtained, setAllPostsObtained] = useState([])
+  const [showFilterModal, setShowFilterModal] = useState(false)
+  const [selectedAuthor, setSelectedAuthor] = useState(null)
+
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState(null)
 
@@ -64,6 +69,15 @@ export default function HomeScreen() {
     fetchUserName()
   }, [user.uid, dispatch])
 
+  const onAuthorSelected = (author) => {
+    setSelectedAuthor(author)
+    toggleFilterModal()
+  }
+
+  const toggleFilterModal = () => {
+    setShowFilterModal(!showFilterModal)
+  }
+
   const handleLogOut = async () => {
     await signOut(auth)
   }
@@ -82,10 +96,23 @@ export default function HomeScreen() {
         </TouchableOpacity>
       </View>
       <View className="max-h-[70%] mx-3 my-6">
-        <View className="justify-between items-center">
+        <View className="justify-between items-center flex-row">
           <Text className={`${colors.heading} font-bold text-xl`}>
-            Publicaciones Receientes
+            Publicaciones Recientes
           </Text>
+          <TouchableOpacity
+            onPress={() => setShowFilterModal(!showFilterModal)}
+          >
+            <MagnifyingGlassIcon size="30" />
+          </TouchableOpacity>
+          {showFilterModal && (
+            <FilterModal
+              visible={showFilterModal}
+              onClose={toggleFilterModal}
+              allPostsObtained={allPostsObtained}
+              onAuthorSelected={onAuthorSelected}
+            />
+          )}
         </View>
         <View>
           {isLoading ? (
@@ -94,7 +121,13 @@ export default function HomeScreen() {
             <Text>Error: {error}</Text>
           ) : (
             <FlatList
-              data={allPostsObtained}
+              data={
+                selectedAuthor
+                  ? allPostsObtained.filter(
+                      (post) => post.author === selectedAuthor
+                    )
+                  : allPostsObtained
+              }
               keyExtractor={(item) => item.id}
               showsVerticalScrollIndicator={false}
               renderItem={({ item }) => (
