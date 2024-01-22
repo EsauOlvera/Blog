@@ -1,5 +1,11 @@
 import { React, useEffect, useState } from 'react'
-import { View, Text, TouchableOpacity, FlatList } from 'react-native'
+import {
+  View,
+  Text,
+  TouchableOpacity,
+  FlatList,
+  RefreshControl,
+} from 'react-native'
 import ScreenWrapper from '../components/ScreenWrapper'
 import { colors } from '../theme'
 import PostView from '../components/PostView'
@@ -16,6 +22,7 @@ import { setUserName } from '../redux/slices/user'
 import NowLoading from '../components/NowLoading'
 import { MagnifyingGlassIcon } from 'react-native-heroicons/outline'
 import FilterModal from '../components/FilterModal'
+import AsyncStorage from '@react-native-async-storage/async-storage'
 
 export default function HomeScreen() {
   const { user } = useSelector((state) => state.user)
@@ -31,6 +38,7 @@ export default function HomeScreen() {
 
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState(null)
+  const [refreshing, setRefreshing] = useState(false)
 
   useEffect(() => {
     const fetchUserName = async () => {
@@ -59,16 +67,38 @@ export default function HomeScreen() {
 
         const flattenedPosts = usersWithPosts.flat()
         setAllPostsObtained(flattenedPosts)
+        savePosts(flattenedPosts)
+        setRefreshing(false)
       } catch (error) {
         console.error('Error al obtener información', error.message)
+        setAllPostsObtained(getPosts())
         setError(error.message)
       } finally {
+        setRefreshing(false)
         setIsLoading(false)
       }
     }
 
     fetchUserName()
-  }, [user.uid, dispatch])
+  }, [user.uid, dispatch, refreshing])
+
+  const savePosts = async (posts) => {
+    try {
+      await AsyncStorage.setItem('posts', JSON.stringify(posts))
+    } catch (error) {
+      console.error('Error al guardar posts:', error)
+    }
+  }
+
+  const getPosts = async () => {
+    try {
+      const savedPosts = await AsyncStorage.getItem('posts')
+      return savedPosts ? JSON.parse(savedPosts) : []
+    } catch (error) {
+      console.error('Error al obtener posts:', error)
+      return []
+    }
+  }
 
   const onAuthorSelected = (author) => {
     setSelectedAuthor(author)
@@ -137,6 +167,12 @@ export default function HomeScreen() {
               }
               keyExtractor={(item) => item.id}
               showsVerticalScrollIndicator={false}
+              refreshControl={
+                <RefreshControl
+                  refreshing={refreshing}
+                  onRefresh={() => setRefreshing(true)}
+                />
+              }
               renderItem={({ item }) => (
                 <PostView
                   title={item.title}
