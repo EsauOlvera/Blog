@@ -1,48 +1,60 @@
 import React, { useState } from 'react'
-import {
-  View,
-  Modal,
-  Text,
-  TouchableOpacity,
-  FlatList,
-  Dimensions,
-} from 'react-native'
-
-const windowHeight = Dimensions.get('window').height
+import { View, Modal, Text, TouchableOpacity, FlatList } from 'react-native'
 
 const FilterModal = ({
   visible,
   onClose,
   allPostsObtained,
   onAuthorSelected,
+  onDateSelected,
 }) => {
   const [authorsFilter, setAuthorsFilter] = useState(false)
+
+  const [datesFilter, setDatesFilter] = useState(false)
+  const [uniqueDates, setUniqueDates] = useState([])
   const [selectedAuthor, setSelectedAuthor] = useState(null)
 
   const showAuthors = () => {
     setAuthorsFilter(!authorsFilter)
+    setDatesFilter(false)
+  }
+
+  const showDates = () => {
+    setDatesFilter(!datesFilter)
+    setAuthorsFilter(false)
+    if (!uniqueDates.length) {
+      const uniqueDatesSet = new Set(
+        allPostsObtained.map((post) =>
+          post.timestamp
+            .toDate()
+            .toLocaleDateString('es-ES', { month: 'long', year: 'numeric' })
+        )
+      )
+      const uniqueDatesArray = Array.from(uniqueDatesSet)
+      setUniqueDates(uniqueDatesArray)
+    }
+  }
+
+  const handleDateSelection = (date) => {
+    setSelectedAuthor(author)
+    onDateSelected(date)
+    onClose()
   }
 
   const handleAuthorSelection = (author) => {
-    setSelectedAuthor(author)
     onAuthorSelected(author)
+    onClose()
   }
 
   return (
     <Modal visible={visible} animationType="slide" transparent={true}>
       <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
-        <View
-          style={{
-            backgroundColor: 'white',
-            padding: 20,
-            borderRadius: 10,
-            elevation: 5,
-            maxHeight: windowHeight * 0.5,
-          }}
-        >
-          <Text>Selecciona el tipo de filtro:</Text>
+        <View className="bg-slate-300 m-50 h-1/3 w-2/3 justify-between items-center rounded-3xl shadow-sm">
+          <Text className="font-bold text-lg">
+            Selecciona el tipo de filtro:
+          </Text>
           <TouchableOpacity onPress={showAuthors}>
-            <Text>Authors</Text>
+            <Text className="font-bold text-lg">Autores</Text>
           </TouchableOpacity>
           {authorsFilter && (
             <FlatList
@@ -50,15 +62,32 @@ const FilterModal = ({
                 new Set(allPostsObtained.map((post) => post.author))
               )}
               renderItem={({ item }) => (
-                <TouchableOpacity onPress={() => handleAuthorSelection(item)}>
-                  <Text>{item}</Text>
+                <TouchableOpacity
+                  className="items-center"
+                  onPress={() => handleAuthorSelection(item)}
+                >
+                  <Text className="font-bold text-lg">{item}</Text>
+                </TouchableOpacity>
+              )}
+              keyExtractor={(item) => item}
+            />
+          )}
+          <TouchableOpacity onPress={showDates}>
+            <Text className="font-bold text-lg">Fecha</Text>
+          </TouchableOpacity>
+          {datesFilter && (
+            <FlatList
+              data={uniqueDates}
+              renderItem={({ item }) => (
+                <TouchableOpacity onPress={() => handleDateSelection(item)}>
+                  <Text className="font-bold text-lg">{item}</Text>
                 </TouchableOpacity>
               )}
               keyExtractor={(item) => item}
             />
           )}
           <TouchableOpacity onPress={onClose}>
-            <Text>Cancelar</Text>
+            <Text className="font-bold text-lg">Cancelar</Text>
           </TouchableOpacity>
         </View>
       </View>

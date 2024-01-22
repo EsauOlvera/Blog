@@ -27,6 +27,7 @@ export default function HomeScreen() {
   const [allPostsObtained, setAllPostsObtained] = useState([])
   const [showFilterModal, setShowFilterModal] = useState(false)
   const [selectedAuthor, setSelectedAuthor] = useState(null)
+  const [selectedDate, setSelectedDate] = useState(null)
 
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState(null)
@@ -74,6 +75,11 @@ export default function HomeScreen() {
     toggleFilterModal()
   }
 
+  const onDateSelected = (date) => {
+    setSelectedDate(date)
+    toggleFilterModal()
+  }
+
   const toggleFilterModal = () => {
     setShowFilterModal(!showFilterModal)
   }
@@ -111,6 +117,7 @@ export default function HomeScreen() {
               onClose={toggleFilterModal}
               allPostsObtained={allPostsObtained}
               onAuthorSelected={onAuthorSelected}
+              onDateSelected={onDateSelected}
             />
           )}
         </View>
