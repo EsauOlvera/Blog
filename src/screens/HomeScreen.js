@@ -23,6 +23,7 @@ import NowLoading from '../components/NowLoading'
 import { MagnifyingGlassIcon } from 'react-native-heroicons/outline'
 import FilterModal from '../components/FilterModal'
 import AsyncStorage from '@react-native-async-storage/async-storage'
+import NetInfo from '@react-native-community/netinfo'
 
 export default function HomeScreen() {
   const { user } = useSelector((state) => state.user)
@@ -34,16 +35,19 @@ export default function HomeScreen() {
   const [allPostsObtained, setAllPostsObtained] = useState([])
   const [showFilterModal, setShowFilterModal] = useState(false)
   const [selectedAuthor, setSelectedAuthor] = useState(null)
+  const [postsLoaded, setPostsLoaded] = useState(false)
+  const [isOffline, setIsOffLine] = useState(null)
   const [selectedDate, setSelectedDate] = useState(null)
 
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState(null)
-  const [refreshing, setRefreshing] = useState(false)
+  const [refreshing, setRefreshing] = useState(null)
 
   useEffect(() => {
     const fetchUserName = async () => {
       try {
         setIsLoading(true)
+        setIsOffLine(true)
         const fetchedUserName = await getUserNameFromFirebase(user.uid)
         setUserNameStored(fetchedUserName)
         dispatch(setUserName(fetchedUserName))
@@ -67,12 +71,30 @@ export default function HomeScreen() {
 
         const flattenedPosts = usersWithPosts.flat()
         setAllPostsObtained(flattenedPosts)
+
         savePosts(flattenedPosts)
+        setPostsLoaded(true)
         setRefreshing(false)
+        setIsOffLine(false)
+        const netInfoState = await NetInfo.fetch()
+        if (!netInfoState.isConnected) {
+          setIsOffLine(false)
+        }
       } catch (error) {
-        console.error('Error al obtener información', error.message)
-        setAllPostsObtained(getPosts())
-        setError(error.message)
+        setIsOffLine(true)
+        Snackbar.show({
+          text: error.message,
+          backgroundColor: 'red',
+        })
+        const netInfoState = await NetInfo.fetch()
+        if (netInfoState.isConnected) {
+          setAllPostsObtained(await getPosts())
+          setPostsLoaded(true)
+        } else {
+          setError(
+            'No se pudo cargar la información. Verifica tu conexión a Internet.'
+          )
+        }
       } finally {
         setRefreshing(false)
         setIsLoading(false)
@@ -93,6 +115,7 @@ export default function HomeScreen() {
   const getPosts = async () => {
     try {
       const savedPosts = await AsyncStorage.getItem('posts')
+      console.log('Datos obtenidos de AsyncStorage:', savedPosts)
       return savedPosts ? JSON.parse(savedPosts) : []
     } catch (error) {
       console.error('Error al obtener posts:', error)
@@ -154,44 +177,53 @@ export default function HomeScreen() {
         <View>
           {isLoading ? (
             <NowLoading />
-          ) : error ? (
-            <Text>Error: {error}</Text>
           ) : (
-            <FlatList
-              data={
-                selectedAuthor
-                  ? allPostsObtained.filter(
-                      (post) => post.author === selectedAuthor
-                    )
-                  : allPostsObtained
-              }
-              keyExtractor={(item) => item.id}
-              showsVerticalScrollIndicator={false}
-              refreshControl={
-                <RefreshControl
-                  refreshing={refreshing}
-                  onRefresh={() => setRefreshing(true)}
-                />
-              }
-              renderItem={({ item }) => (
-                <PostView
-                  title={item.title}
-                  autor={item.author}
-                  date={item.timestamp}
-                  content={item.content}
-                />
-              )}
-            />
+            postsLoaded && (
+              <FlatList
+                data={
+                  selectedAuthor
+                    ? allPostsObtained.filter(
+                        (post) => post.author === selectedAuthor
+                      )
+                    : allPostsObtained
+                }
+                keyExtractor={(item) => item.id}
+                showsVerticalScrollIndicator={false}
+                refreshControl={
+                  <RefreshControl
+                    refreshing={refreshing}
+                    onRefresh={() => {
+                      setRefreshing(true)
+                    }}
+                  />
+                }
+                renderItem={({ item }) => (
+                  <PostView
+                    title={item.title}
+                    autor={item.author}
+                    date={item.timestamp}
+                    content={item.content}
+                  />
+                )}
+              />
+            )
           )}
         </View>
       </View>
       <View className="flex justify-between mx-4">
         <TouchableOpacity
           onPress={() => navigation.navigate('Creacion')}
-          className="rounded-full p-2 shadow-sm bg-blue-600 my-6"
+          className={`rounded-full p-2 shadow-sm bg-blue-600 my-6  ${
+            isOffline ? 'opacity-50' : ''
+          } ${refreshing ? 'opacity-50' : ''}`}
+          disabled={isOffline || refreshing}
         >
           <Text className="text-center text-white text-lg font-bold">
-            Nuevo Post
+            {refreshing
+              ? `Cargando`
+              : isOffline
+              ? `Servicio no disponible`
+              : `Nuevo Post`}
           </Text>
         </TouchableOpacity>
       </View>
