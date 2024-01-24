@@ -32,9 +32,9 @@ export default function PostView({ title, autor, date, content }) {
   }
 
   return (
-    <View className="flex-1 bg-slate-300 rounded shadow-sm my-1">
+    <View className="bg-slate-300 rounded shadow-sm my-1">
       <View className="justify-between items-baseline p-3">
-        <Text className="font-bold text-2xl text-clip">{title}</Text>
+        <Text className="font-bold text-2xl text-clip ">{title}</Text>
       </View>
       <View className="flex-row px-3 justify-between items-baseline">
         <Text className="font-light">{autor}</Text>

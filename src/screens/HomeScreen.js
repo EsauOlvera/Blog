@@ -33,11 +33,15 @@ export default function HomeScreen() {
   const [userNameStored, setUserNameStored] = useState('')
 
   const [allPostsObtained, setAllPostsObtained] = useState([])
+  const [filteredPosts, setFilteredPosts] = useState([])
+
   const [showFilterModal, setShowFilterModal] = useState(false)
   const [selectedAuthor, setSelectedAuthor] = useState(null)
+  const [selectedDate, setSelectedDate] = useState(null)
+  const [selectedTitle, setSelectedTitle] = useState(null)
+
   const [postsLoaded, setPostsLoaded] = useState(false)
   const [isOffline, setIsOffLine] = useState(null)
-  const [selectedDate, setSelectedDate] = useState(null)
 
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState(null)
@@ -54,22 +58,33 @@ export default function HomeScreen() {
 
         const users = await getAllUsers()
 
-        const usersWithPosts = await Promise.all(
+        const usersWithFormattedPosts = await Promise.all(
           users.map(async (user) => {
             const userPosts = await getUserPosts(user.id)
             const userName = await getUserNameFromFirebase(user.id)
 
-            const postsWithAuthor = userPosts.map((post) => ({
-              id: post.id,
-              author: userName,
-              ...post,
-            }))
+            const postsWithFormattedDate = userPosts.map((post) => {
+              const formattedDate = post.timestamp
+                .toDate()
+                .toLocaleDateString('es-ES', {
+                  day: 'numeric',
+                  month: 'long',
+                  year: 'numeric',
+                })
 
-            return postsWithAuthor
+              return {
+                id: post.id,
+                author: userName,
+                formattedDate,
+                ...post,
+              }
+            })
+
+            return postsWithFormattedDate
           })
         )
 
-        const flattenedPosts = usersWithPosts.flat()
+        const flattenedPosts = usersWithFormattedPosts.flat()
         setAllPostsObtained(flattenedPosts)
 
         savePosts(flattenedPosts)
@@ -104,6 +119,17 @@ export default function HomeScreen() {
     fetchUserName()
   }, [user.uid, dispatch, refreshing])
 
+  useEffect(() => {
+    if (selectedAuthor) {
+      const newFilteredPosts = allPostsObtained.filter(
+        (post) => post.author === selectedAuthor
+      )
+      setFilteredPosts(newFilteredPosts)
+    } else {
+      setFilteredPosts(allPostsObtained)
+    }
+  }, [selectedAuthor, allPostsObtained])
+
   const savePosts = async (posts) => {
     try {
       await AsyncStorage.setItem('posts', JSON.stringify(posts))
@@ -126,11 +152,50 @@ export default function HomeScreen() {
   const onAuthorSelected = (author) => {
     setSelectedAuthor(author)
     toggleFilterModal()
+
+    const filteredPosts = allPostsObtained.filter(
+      (post) => post.author === selectedAuthor
+    )
+
+    setFilteredPosts(filteredPosts)
+
+    setSelectedDate(null)
+    setSelectedTitle(null)
+  }
+
+  const onTitleSelected = (title) => {
+    setSelectedTitle(title)
+    toggleFilterModal()
+
+    const filteredPosts = allPostsObtained.filter(
+      (post) => post.title === title
+    )
+
+    setFilteredPosts(filteredPosts)
+    setSelectedDate(null)
+    setSelectedAuthor(null)
   }
 
   const onDateSelected = (date) => {
     setSelectedDate(date)
+
+    const postsWithMatchingDate = allPostsObtained.filter((post) => {
+      const postFormattedDate = post.timestamp
+        .toDate()
+        .toLocaleDateString('es-ES', {
+          day: 'numeric',
+          month: 'long',
+          year: 'numeric',
+        })
+
+      return postFormattedDate === date
+    })
+
+    setFilteredPosts(postsWithMatchingDate)
+
     toggleFilterModal()
+    setSelectedAuthor(null)
+    setSelectedTitle(null)
   }
 
   const toggleFilterModal = () => {
@@ -171,22 +236,17 @@ export default function HomeScreen() {
               allPostsObtained={allPostsObtained}
               onAuthorSelected={onAuthorSelected}
               onDateSelected={onDateSelected}
+              onTitleSelected={onTitleSelected}
             />
           )}
         </View>
-        <View>
+        <View className="max-h-[100%]">
           {isLoading ? (
             <NowLoading />
           ) : (
             postsLoaded && (
               <FlatList
-                data={
-                  selectedAuthor
-                    ? allPostsObtained.filter(
-                        (post) => post.author === selectedAuthor
-                      )
-                    : allPostsObtained
-                }
+                data={filteredPosts ? filteredPosts : allPostsObtained}
                 keyExtractor={(item) => item.id}
                 showsVerticalScrollIndicator={false}
                 refreshControl={
