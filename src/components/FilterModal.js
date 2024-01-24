@@ -58,7 +58,6 @@ const FilterModal = ({
 
   const handleTitleSelection = (title) => {
     onTitleSelected(title)
-    console.log(title)
     onClose()
   }
 

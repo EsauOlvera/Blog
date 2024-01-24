@@ -121,14 +121,44 @@ export default function HomeScreen() {
 
   useEffect(() => {
     if (selectedAuthor) {
-      const newFilteredPosts = allPostsObtained.filter(
+      const filteredPosts = allPostsObtained.filter(
         (post) => post.author === selectedAuthor
       )
-      setFilteredPosts(newFilteredPosts)
+      setFilteredPosts(filteredPosts)
     } else {
       setFilteredPosts(allPostsObtained)
     }
   }, [selectedAuthor, allPostsObtained])
+
+  useEffect(() => {
+    if (selectedTitle) {
+      const filteredPosts = allPostsObtained.filter(
+        (post) => post.title === selectedTitle
+      )
+      setFilteredPosts(filteredPosts)
+    } else {
+      setFilteredPosts(allPostsObtained)
+    }
+  }, [selectedTitle, allPostsObtained])
+
+  useEffect(() => {
+    if (selectedDate) {
+      const postsWithMatchingDate = allPostsObtained.filter((post) => {
+        const postFormattedDate = post.timestamp
+          .toDate()
+          .toLocaleDateString('es-ES', {
+            day: 'numeric',
+            month: 'long',
+            year: 'numeric',
+          })
+
+        return postFormattedDate === selectedDate
+      })
+      setFilteredPosts(postsWithMatchingDate)
+    } else {
+      setFilteredPosts(allPostsObtained)
+    }
+  }, [selectedDate, allPostsObtained])
 
   const savePosts = async (posts) => {
     try {
@@ -152,13 +182,6 @@ export default function HomeScreen() {
   const onAuthorSelected = (author) => {
     setSelectedAuthor(author)
     toggleFilterModal()
-
-    const filteredPosts = allPostsObtained.filter(
-      (post) => post.author === selectedAuthor
-    )
-
-    setFilteredPosts(filteredPosts)
-
     setSelectedDate(null)
     setSelectedTitle(null)
   }
@@ -166,33 +189,12 @@ export default function HomeScreen() {
   const onTitleSelected = (title) => {
     setSelectedTitle(title)
     toggleFilterModal()
-
-    const filteredPosts = allPostsObtained.filter(
-      (post) => post.title === title
-    )
-
-    setFilteredPosts(filteredPosts)
     setSelectedDate(null)
     setSelectedAuthor(null)
   }
 
   const onDateSelected = (date) => {
     setSelectedDate(date)
-
-    const postsWithMatchingDate = allPostsObtained.filter((post) => {
-      const postFormattedDate = post.timestamp
-        .toDate()
-        .toLocaleDateString('es-ES', {
-          day: 'numeric',
-          month: 'long',
-          year: 'numeric',
-        })
-
-      return postFormattedDate === date
-    })
-
-    setFilteredPosts(postsWithMatchingDate)
-
     toggleFilterModal()
     setSelectedAuthor(null)
     setSelectedTitle(null)
